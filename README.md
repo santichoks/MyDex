@@ -1,5 +1,5 @@
 <h1>MyDex</h1>
-<h3>⏳ Inprogress 15%</h3>
+<h3>⏳ Inprogress 25%</h3>
 
 <p align="center">
   <img src="./others/example_01.png" width="30%">
