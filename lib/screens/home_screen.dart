@@ -13,12 +13,24 @@ class HomeScreen extends StatefulWidget {
 class _MyWidgetState extends State<HomeScreen> {
   List<dynamic> pokemonList = [];
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool isSearchBar = false;
+  bool showbtn = false;
 
   @override
   void initState() {
-    super.initState();
     callPokemonList();
+    _scrollController.addListener(() {
+      if (_scrollController.offset > 10) {
+        showbtn = true;
+        setState(() {});
+      } else {
+        showbtn = false;
+        setState(() {});
+      }
+    });
+
+    super.initState();
   }
 
   void callPokemonList() async {
@@ -95,17 +107,57 @@ class _MyWidgetState extends State<HomeScreen> {
           )
         ],
       ),
-      body: GridView(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
+      floatingActionButton: Visibility(
+        visible: showbtn,
+        child: FloatingActionButton.small(
+          shape: const CircleBorder(),
+          onPressed: () {
+            _scrollController.animateTo(
+              _scrollController.position.minScrollExtent,
+              duration: const Duration(seconds: 2),
+              curve: Curves.fastOutSlowIn,
+            );
+          },
+          backgroundColor: Colors.red,
+          child: const Icon(
+            Icons.arrow_upward,
+            color: Colors.white,
+          ),
         ),
-        children: pokemonList.where((pokemon) {
-          String name = pokemon["name"];
-          return name.contains(_searchController.text) ? true : false;
-        }).map((pokemon) {
-          return Image.network("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${pokemon["id"]}.gif");
-        }).toList(),
       ),
+      body: pokemonList.isNotEmpty
+          ? GridView(
+              controller: _scrollController,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 3 / 2,
+              ),
+              children: pokemonList.where((pokemon) {
+                String name = pokemon["name"];
+                return name.contains(_searchController.text) ? true : false;
+              }).map((pokemon) {
+                return Card(
+                  color: Colors.red[200],
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Image.network(
+                    "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon["id"]}.png",
+                    loadingBuilder: (context, child, loadingProgress) {
+                      return loadingProgress == null
+                          ? child
+                          : const Center(
+                              child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ));
+                    },
+                  ),
+                );
+              }).toList(),
+            )
+          : const Center(
+              child: CircularProgressIndicator(
+                color: Colors.red,
+              ),
+            ),
     );
   }
 }
