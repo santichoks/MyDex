@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:my_dex/screens/home_screen.dart';
 
 void main() {
-  runApp(MyDex());
+  runApp(const MyDex());
 }
 
 class MyDex extends StatelessWidget {
