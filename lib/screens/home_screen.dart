@@ -115,71 +115,69 @@ class _MyWidgetState extends State<HomeScreen> {
             ),
           ),
         ),
-        body: pokemonList.isNotEmpty
-            ? GridView(
-                controller: _scrollController,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 3 / 2,
-                ),
-                children: pokemonList.where((pokemon) {
-                  String name = pokemon["name"];
-                  return name.contains(prevSearch.toLowerCase()) ? true : false;
-                }).map((pokemon) {
-                  return Card(
-                    color: Colors.red[200],
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: -30,
-                          child: Opacity(
-                            opacity: 0.15,
-                            child: Image.network(
-                              "https://icon-library.com/images/pokeball-icon-transparent/pokeball-icon-transparent-26.jpg",
-                              height: 136,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 12,
-                          left: 12,
-                          child: Text(
-                            "${pokemon["name"][0].toUpperCase()}${pokemon["name"].substring(1, pokemon["name"].length)}",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 1,
-                                  color: Colors.redAccent,
-                                  offset: Offset(1, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 6,
-                          bottom: 6,
-                          child: Image.network(
-                            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon["id"]}.png",
-                            loadingBuilder: (context, child, loadingProgress) {
-                              return loadingProgress == null ? child : const Center(child: CircularProgressIndicator(color: Colors.white));
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(child: CircularProgressIndicator(color: Colors.white));
-                            },
-                            height: 96,
-                          ),
-                        ),
-                      ],
+        body: GridView(
+          controller: _scrollController,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 3 / 2,
+          ),
+          children: pokemonList.where((pokemon) {
+            String name = pokemon["name"];
+            return name.contains(prevSearch.toLowerCase()) ? true : false;
+          }).map((pokemon) {
+            return Card(
+              color: Colors.red[200],
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: -30,
+                    child: Opacity(
+                      opacity: 0.15,
+                      child: Image.network(
+                        "https://icon-library.com/images/pokeball-icon-transparent/pokeball-icon-transparent-26.jpg",
+                        height: 136,
+                      ),
                     ),
-                  );
-                }).toList(),
-              )
-            : const Center(child: CircularProgressIndicator(color: Colors.red)));
+                  ),
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Text(
+                      "${pokemon["name"][0].toUpperCase()}${pokemon["name"].substring(1, pokemon["name"].length)}",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 1,
+                            color: Colors.redAccent,
+                            offset: Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 6,
+                    bottom: 6,
+                    child: Image.network(
+                      "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon["id"]}.png",
+                      loadingBuilder: (context, child, loadingProgress) {
+                        return loadingProgress == null ? child : const Center(child: CircularProgressIndicator(color: Colors.white));
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(child: CircularProgressIndicator(color: Colors.white));
+                      },
+                      height: 96,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ));
   }
 }
 
