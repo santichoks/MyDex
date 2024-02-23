@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:my_dex/screens/detail_screen.dart';
+import 'package:collection/collection.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -68,74 +70,84 @@ class _MyWidgetState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            "MyDex",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+      appBar: AppBar(
+        title: const Text(
+          "MyDex",
+          style: TextStyle(
+            fontSize: 24,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-          backgroundColor: Colors.red,
-          actions: [
-            IconButton(
-              onPressed: () {
-                showSearch(
-                  context: context,
-                  delegate: CustomSearchDelegate(
-                    pokemonList: pokemonList,
-                    prevSearchValue: prevSearch,
-                    searchHandler: _searchHandler,
-                  ),
-                );
-              },
-              icon: const Icon(
-                Icons.search,
-                color: Colors.white,
-                size: 28,
-              ),
-            )
-          ],
         ),
-        floatingActionButton: Visibility(
-          visible: showbtn,
-          child: FloatingActionButton.small(
-            shape: const CircleBorder(),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(16),
+          ),
+        ),
+        backgroundColor: Colors.red,
+        actions: [
+          IconButton(
             onPressed: () {
-              _scrollController.animateTo(
-                _scrollController.position.minScrollExtent,
-                duration: const Duration(seconds: 1),
-                curve: Curves.fastOutSlowIn,
+              showSearch(
+                context: context,
+                delegate: CustomSearchDelegate(
+                  pokemonList: pokemonList,
+                  prevSearchValue: prevSearch,
+                  searchHandler: _searchHandler,
+                ),
               );
             },
-            backgroundColor: Colors.red,
-            child: const Icon(
-              Icons.arrow_upward,
+            icon: const Icon(
+              Icons.search,
               color: Colors.white,
+              size: 28,
             ),
+          )
+        ],
+      ),
+      floatingActionButton: Visibility(
+        visible: showbtn,
+        child: FloatingActionButton.small(
+          shape: const CircleBorder(),
+          onPressed: () {
+            _scrollController.animateTo(
+              _scrollController.position.minScrollExtent,
+              duration: const Duration(seconds: 1),
+              curve: Curves.fastOutSlowIn,
+            );
+          },
+          backgroundColor: Colors.red,
+          child: const Icon(
+            Icons.arrow_upward,
+            color: Colors.white,
           ),
         ),
-        body: GridView(
-          controller: _scrollController,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 3 / 2,
-          ),
-          children: pokemonList.where((pokemon) {
-            String name = pokemon["name"];
-            return name.contains(prevSearch.toLowerCase()) ? true : false;
-          }).map((pokemon) {
-            return Card(
-              color: Colors.red[200],
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      body: GridView(
+        controller: _scrollController,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 3 / 2,
+        ),
+        children: pokemonList.where((pokemon) {
+          String name = pokemon["name"];
+          return name.contains(prevSearch.toLowerCase()) ? true : false;
+        }).mapIndexed((index, pokemon) {
+          return Card(
+            color: Colors.red[200],
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: InkWell(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailScreen(pokemonList: pokemonList, initIndex: pokemonList.indexOf(pokemon)))),
+              splashColor: Colors.redAccent,
+              borderRadius: BorderRadius.circular(16),
               child: Stack(
                 children: [
                   Positioned(
                     left: -30,
                     child: Opacity(
                       opacity: 0.15,
-                      child: Image.network(
-                        "https://icon-library.com/images/pokeball-icon-transparent/pokeball-icon-transparent-26.jpg",
+                      child: Image.asset(
+                        "others/asset_01.jpeg",
                         height: 136,
                       ),
                     ),
@@ -175,9 +187,11 @@ class _MyWidgetState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            );
-          }).toList(),
-        ));
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 }
 
@@ -199,7 +213,7 @@ class CustomSearchDelegate extends SearchDelegate {
   }
 
   @override
-  List<Widget>? buildActions(BuildContext context) {
+  List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
         icon: const Icon(Icons.clear),
@@ -238,9 +252,9 @@ class CustomSearchDelegate extends SearchDelegate {
     return ListView(
       children: pokemonList
           .where((pokemon) => pokemon["name"].contains(query.toLowerCase()) ? true : false)
-          .map(
-            (pokemon) => ListTile(
-              splashColor: Colors.red,
+          .mapIndexed(
+            (index, pokemon) => ListTile(
+              splashColor: Colors.redAccent,
               title: Row(children: [
                 Container(
                   width: 44,
@@ -265,8 +279,7 @@ class CustomSearchDelegate extends SearchDelegate {
                 Text("${pokemon["name"][0].toUpperCase()}${pokemon["name"].substring(1, pokemon["name"].length)}"),
               ]),
               onTap: () {
-                searchHandler(pokemon["name"]);
-                close(context, "");
+                Navigator.push(context, MaterialPageRoute(builder: (context) => DetailScreen(pokemonList: pokemonList, initIndex: pokemonList.indexOf(pokemon))));
               },
             ),
           )
