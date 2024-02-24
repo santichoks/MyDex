@@ -39,8 +39,10 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   dynamic pokemon;
+  dynamic pokemonSpecies;
+  dynamic pokemonEvolution;
   int currentIndex = 0;
-  bool isAnimation = true;
+  bool isAnimation = false;
 
   @override
   void initState() {
@@ -49,15 +51,41 @@ class _DetailScreenState extends State<DetailScreen> {
     });
 
     callPokemonDetail(widget.pokemonList[widget.initIndex]["id"]);
+    callPokemonSpecies(widget.pokemonList[widget.initIndex]["id"]);
+    callPokemonEvolution(widget.pokemonList[widget.initIndex]["id"]);
     super.initState();
   }
 
-  void callPokemonDetail(String id) async {
+  Future callPokemonDetail(String id) async {
     var url = Uri.http("pokeapi.co", "/api/v2/pokemon/$id");
+    var response = await http.get(url);
+    var pk = jsonDecode(response.body);
+
+    url = Uri.http("pokeapi.co", "/api/v2/pokemon-species/$id");
+    response = await http.get(url);
+    var pkSpecies = jsonDecode(response.body);
+
+    setState(() {
+      pokemon = pk;
+      pokemonSpecies = pkSpecies;
+    });
+  }
+
+  Future callPokemonSpecies(String id) async {
+    var url = Uri.http("pokeapi.co", "/api/v2/pokemon-species/$id");
     var response = await http.get(url);
 
     setState(() {
-      pokemon = jsonDecode(response.body);
+      pokemonSpecies = jsonDecode(response.body);
+    });
+  }
+
+  Future callPokemonEvolution(String id) async {
+    var url = Uri.http("pokeapi.co", "/api/v2/evolution-chain/$id");
+    var response = await http.get(url);
+
+    setState(() {
+      pokemonEvolution = jsonDecode(response.body);
     });
   }
 
@@ -65,17 +93,17 @@ class _DetailScreenState extends State<DetailScreen> {
     return int.parse(types[pokemon["types"][index]["type"]["name"]], radix: 16);
   }
 
-  String getId() {
+  String getId(bool isNumberSign) {
     String id = pokemon["id"].toString();
     switch (id.length) {
       case 1:
-        return "#000$id";
+        return isNumberSign ? "#000$id" : "000$id";
       case 2:
-        return "#00$id";
+        return isNumberSign ? "#00$id" : "00$id";
       case 3:
-        return "#0$id";
+        return isNumberSign ? "#0$id" : "0$id";
       default:
-        return "#$id";
+        return isNumberSign ? "#$id" : id;
     }
   }
 
@@ -84,7 +112,7 @@ class _DetailScreenState extends State<DetailScreen> {
     return pokemon != null
         ? Scaffold(
             appBar: PreferredSize(
-              preferredSize: const Size.fromHeight(380),
+              preferredSize: const Size.fromHeight(360),
               child: Stack(
                 children: [
                   AppBar(
@@ -141,7 +169,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                 ),
                               ),
                               Text(
-                                getId(),
+                                getId(true),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   color: Colors.white,
@@ -227,7 +255,7 @@ class _DetailScreenState extends State<DetailScreen> {
                           width: double.infinity,
                           child: PageView(
                             controller: PageController(
-                              viewportFraction: 0.36,
+                              viewportFraction: 0.40,
                               initialPage: currentIndex,
                             ),
                             onPageChanged: (value) {
@@ -235,12 +263,14 @@ class _DetailScreenState extends State<DetailScreen> {
                                 setState(() {
                                   currentIndex = value;
                                   callPokemonDetail(widget.pokemonList[value]["id"]);
+                                  callPokemonSpecies(widget.pokemonList[value]["id"]);
+                                  callPokemonEvolution(widget.pokemonList[value]["id"]);
                                 });
                               });
                             },
                             children: widget.pokemonList.mapIndexed((i, pkm) {
                               return Padding(
-                                padding: EdgeInsets.all(i != currentIndex ? 48 : 0),
+                                padding: EdgeInsets.all(i != currentIndex ? 52 : 0),
                                 child: Image.network(
                                   isAnimation
                                       ? "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${pkm["id"]}.gif"
@@ -258,79 +288,236 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
             ),
             body: Padding(
-              padding: const EdgeInsets.all(38),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Status",
-                      style: TextStyle(
-                        fontSize: 24,
-                        color: Colors.grey[800],
-                        fontWeight: FontWeight.bold,
-                      ),
+              padding: const EdgeInsets.all(0),
+              child: DefaultTabController(
+                length: 3,
+                initialIndex: 0,
+                child: Scaffold(
+                  appBar: AppBar(
+                    toolbarHeight: 12,
+                    automaticallyImplyLeading: false,
+                    bottom: TabBar(
+                      labelColor: Color(getTypeColor(0)),
+                      indicatorColor: Color(getTypeColor(0)),
+                      tabs: const [
+                        Tab(icon: Icon(Icons.feed)),
+                        Tab(icon: Icon(Icons.leaderboard)),
+                        Tab(icon: Icon(Icons.album)),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  body: TabBarView(
                     children: [
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("HP"),
-                          SizedBox(height: 16),
-                          Text("Attack"),
-                          SizedBox(height: 16),
-                          Text("Defense"),
-                          SizedBox(height: 16),
-                          Text("Sp.Attack"),
-                          SizedBox(height: 16),
-                          Text("Sp.Defense"),
-                          SizedBox(height: 16),
-                          Text("Speed"),
-                          SizedBox(height: 16),
-                        ],
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 36),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 8),
-                            ...List.generate(pokemon["stats"].length, (index) {
-                              return Column(
-                                children: [
-                                  LinearProgressIndicator(
-                                    value: pokemon["stats"][index]["base_stat"] / 255,
-                                    color: Color(getTypeColor(0)),
-                                  ),
-                                  const SizedBox(height: 32),
-                                ],
-                              );
-                            }),
+                            Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                "About",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.grey[800],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "ID",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Name",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Gender Rate",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Catch Rate",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Weight",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Height",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                  ],
+                                ),
+                                const SizedBox(width: 24),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("${pokemon["id"]}"),
+                                    const SizedBox(height: 16),
+                                    Text("${pokemon["name"][0].toUpperCase()}${pokemon["name"].substring(1, pokemon["name"].length)}"),
+                                    const SizedBox(height: 16),
+                                    Text(pokemonSpecies["gender_rate"] == -1 ? "Genderless" : "${((8 - pokemonSpecies["gender_rate"]) / 8) * 100}/${(pokemonSpecies["gender_rate"] / 8) * 100} M/F"),
+                                    const SizedBox(height: 16),
+                                    Text("${((pokemonSpecies["capture_rate"] / 255) * 100).toStringAsFixed(2)}%"),
+                                    const SizedBox(height: 16),
+                                    Text("${(pokemon["weight"] * 0.1).toStringAsFixed(2)} kg"),
+                                    const SizedBox(height: 16),
+                                    Text("${(pokemon["height"] * 1.016).toStringAsFixed(2)} m"),
+                                    const SizedBox(height: 16),
+                                  ],
+                                )
+                              ],
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 24),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: List.generate(pokemon["stats"].length, (index) {
-                          return Column(
-                            children: [
-                              Text(pokemon["stats"][index]["base_stat"].toString()),
-                              const SizedBox(height: 16),
-                            ],
-                          );
-                        }),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 36),
+                        child: Column(
+                          children: [
+                            Text(
+                              "Status",
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: Colors.grey[800],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "HP",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Attack",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Defense",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Sp.Attack",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Sp.Defense",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      "Speed",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 16),
+                                  ],
+                                ),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      const SizedBox(height: 8),
+                                      ...List.generate(pokemon["stats"].length, (index) {
+                                        return Column(
+                                          children: [
+                                            LinearProgressIndicator(
+                                              value: pokemon["stats"][index]["base_stat"] / 255,
+                                              color: Color(getTypeColor(0)),
+                                            ),
+                                            const SizedBox(height: 32),
+                                          ],
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 24),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: List.generate(pokemon["stats"].length, (index) {
+                                    return Column(
+                                      children: [
+                                        Text(
+                                          pokemon["stats"][index]["base_stat"].toString(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                      ],
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.block, size: 58, color: Colors.grey[500]),
+                          const SizedBox(height: 16),
+                          const Text("this Pokémon have no evolutions."),
+                        ],
+                      )
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           )
         : Scaffold(
+            appBar: AppBar(),
             body: Center(
               child: Container(
                 color: Colors.white,
