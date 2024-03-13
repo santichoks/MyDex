@@ -13,5 +13,5 @@
 <br/>
 <h3>Introduction</h3>
 <ul>
-    <li>This project is built to practice learning about Flutter.</li>
+    <li>This project is built to practice and learn about Flutter.</li>
 </ul>
